@@ -2,78 +2,83 @@ from flask import Flask
 import scipy.io
 import io
 
+from scipy.io import loadmat
+
+app = Flask(__name__)
+
+def main_script():
+    output = io.StringIO()
 class PriorityQueue:
     def __init__(self):
-        self.heap = []               # O(1) Create a list to store nodes with priorities in the priority queue. Initialized as an empty list.
-        self.node_to_index = {}      # O(1) Create a dictionary to maintain the mapping of node names to their indices in the heap
+        self.heap = []               
+        self.node_to_index = {}     
 
-    def isEmpty(self):              # Checking the length of a list 
-        return len(self.heap) == 0  # O(1)
+    def isEmpty(self):             
+        return len(self.heap) == 0  
 
-    def insert(self, nodeName, priority): # Inserts a new element into the heap (the name of the node and the priority) into the PQ to maintain the heap property
-        node = (nodeName, priority)   # Input: Node name, priority; O(1) 
-        self.heap.append(node)        # O(1) Appends new node
-        self.node_to_index[nodeName] = len(self.heap)   # O(1) Store the index of the new node
-        self._swim(len(self.heap) - 1)  # Input: Index; Output: None. O(log N)
-        #Calls the _swim() method to move the new node up in the heap if necessary to maintain the heap property
-
-    def extractMin(self):    #takes no explicit input and returns the name of the node with the minimum priority value in the PQ, then removes the node from the queue.
-        if self.isEmpty():   # O(1)
+    def insert(self, nodeName, priority): 
+        node = (nodeName, priority)   
+        self.heap.append(node)        
+        self.node_to_index[nodeName] = len(self.heap)   
+        self._swim(len(self.heap) - 1)  
+       
+    def extractMin(self):    
+        if self.isEmpty():  
             return None
-        min_node, min_priority = self.heap[0]  # Input: None; Output: Node name, priority. O(1)
-        last_node, last_priority = self.heap.pop()  # Input: None; Output: Node name, priority. O(1)
-        del self.node_to_index[min_node]  # O(1) update the dictionary by delete the min_node
+        min_node, min_priority = self.heap[0]  
+        last_node, last_priority = self.heap.pop()  
+        del self.node_to_index[min_node]  
 
         if self.heap:  # O(1)
-            self.heap[0] = (last_node, last_priority)  # O(1) if heap is not empty, update the root with the values of the last node
-            self.node_to_index[last_node] = 0  # O(1)
-            self._sink(0)  # Input: Index； Output: None. O(log N) ensure the root element satisfies the heap property
+            self.heap[0] = (last_node, last_priority)  
+            self.node_to_index[last_node] = 0  
+            self._sink(0)  
 
-        return min_node  # O(1) return node with minimum priority value
+        return min_node  
 
-    def decreaseKey(self, nodeName, newPriority):  # It takes two inputs, nodeName and newPriority, and updates the priority of the specified node in the Priority Queue. It does not return any value.
-        if nodeName in self.node_to_index:  # O(1) Input: Node name. Output: Boolean. Check if node exists in node_to_index
-            index = self.node_to_index[nodeName]  # O(1)
-            if newPriority < self.heap[index][1]:  # O(1)
-                self.heap[index] = (nodeName, newPriority)  # O(1) If the new priority is less than current priority, updates the priority in self.heap
-                self._swim(index)  # Input: Index. Output: None. O(log N)
+    def decreaseKey(self, nodeName, newPriority):  
+        if nodeName in self.node_to_index:  
+            index = self.node_to_index[nodeName]  
+            if newPriority < self.heap[index][1]: 
+                self.heap[index] = (nodeName, newPriority) 
+                self._swim(index)  
 
-    def _swap(self, i, j):  # It takes two indices, i and j, and swaps the elements at these positions in the PQ
-        self.heap[i], self.heap[j] = self.heap[j], self.heap[i]  # Input: Indices. Output: None. O(1)
-        self.node_to_index[self.heap[i][0]] = i  # O(1) updates indices for swapped elements
-        self.node_to_index[self.heap[j][0]] = j  # O(1)
+    def _swap(self, i, j):  
+        self.heap[i], self.heap[j] = self.heap[j], self.heap[i] 
+        self.node_to_index[self.heap[i][0]] = i 
+        self.node_to_index[self.heap[j][0]] = j  
 
-    def _swim(self, index):  # It takes the index of an element in the heap and moves it up the heap if necessary to maintain the heap property
-        while index > 0:  # O(log N) The loop is executed to check and potentially fix the heap property violations by moving the element up the heap
-            parent_index = (index - 1) // 2  # O(1) Input: Index. Output; Parent index. Calculate the parent index
-            if self.heap[index][1] < self.heap[parent_index][1]:  # O(1) Compare the priority of element with the priority of its parent
-                self._swap(index, parent_index)  # O(1) If the comparison is true (i.e., the element has a higher priority than its parent), swap the element with its parent
-                index = parent_index  # O(1) Upadte index
+    def _swim(self, index):  
+        while index > 0: 
+            parent_index = (index - 1) // 2  
+            if self.heap[index][1] < self.heap[parent_index][1]: 
+                self._swap(index, parent_index)  
+                index = parent_index 
             else:
                 break
-        #time complexity is determined by the number of iterations in the loop, which depends on the height of the binary heap. In a binary heap with N elements, the height is logN.
+     
 
-    def _sink(self, index):  # Input: the index of an element in the heap and moves it down the heap if necessary to maintain the heap property
-        while True:  # O(log N) Execute loop and fix the heap property violations by moving the element down the heap
-            left_child_index = 2 * index + 1  # Input: Index; Output: Left child index. O(1)
-            right_child_index = 2 * index + 2  # Input: Index; Output: Right child index. O(1)
-            smallest = index  # O(1) Initialize smallest with current index
+    def _sink(self, index):  
+        while True:  
+            left_child_index = 2 * index + 1 
+            right_child_index = 2 * index + 2  
+            smallest = index 
 
-            if (  # Check if the left child exists by check if it is within the bounds of the heap ans well as if its priority is smaller than the current smallest
-                left_child_index < len(self.heap)  # O(1)
-                and self.heap[left_child_index][1] < self.heap[smallest][1]  # O(1)
+            if (  
+                left_child_index < len(self.heap)  
+                and self.heap[left_child_index][1] < self.heap[smallest][1] 
             ):
-                smallest = left_child_index  # O(1) upadte the index of the left child
+                smallest = left_child_index 
 
             if (  # Check if the right child exists 
-                right_child_index < len(self.heap) - 1 # Input: None. Output: Boolean O(1)
-                and self.heap[right_child_index][1] < self.heap[smallest][1]  # O(1)
+                right_child_index < len(self.heap) - 1 
+                and self.heap[right_child_index][1] < self.heap[smallest][1] 
             ):
-                smallest = right_child_index  # O(1)
+                smallest = right_child_index 
 
-            if smallest != index:  # O(1)  Check if the smallest index is still the same as the original index to see if heap property is satisfied
-                self._swap(index, smallest)  # O(1)
-                index = smallest  # O(1)
+            if smallest != index: 
+                self._swap(index, smallest)  
+                index = smallest  
             else:
                 break
 
@@ -102,15 +107,6 @@ def myDijkstra(adj_matrix, origin):
 
     return dist, prev  # Output: Lists O(1)
 
-from scipy.io import loadmat
-
-
-app = Flask(__name__)
-
-def main_script():
-    output = io.StringIO()
-
-    # Define an array of graph filenames
     graph_files = ['graph1.mat', 'graph2.mat', 'graph3.mat', 'graph4.mat', 'graph5.mat', 'graph6.mat']
 
     # Iterate through each graph file
@@ -125,7 +121,7 @@ def main_script():
             continue  # If no valid variable names are found, skip to the next file
 
         # Specify the origin node (customizable as needed)
-        origin = 0  # Python uses 0-indexing
+        origin = 0  
 
         # Call the my_dijkstra function to compute shortest distances
         dist, prev = my_dijkstra(adj_matrix, origin)
@@ -135,9 +131,9 @@ def main_script():
         output.write('dist prev\n')
         for i in range(len(dist)):
             output.write(f'{dist[i]:<4} {prev[i]:<4}\n')
-        output.write('\n')  # Separate results of different graphs with an empty line
+        output.write('\n')  
 
-    # Return the entire buffer contents as a string
+    
     return output.getvalue()
 
 @app.route('/')
@@ -145,8 +141,7 @@ def run_script():
     # Call main_script and get the output
     result = main_script()
     # Return the result to the browser
-    return f"<pre>{result}</pre>"  # Use <pre> tags to format text like in a terminal
+    return f"<pre>{result}</pre>"  
 
 if __name__ == '__main__':
-    # Run the Flask app on all available interfaces on port 80
     app.run(host='0.0.0.0', port=80)
