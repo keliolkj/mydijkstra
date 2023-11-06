@@ -102,7 +102,6 @@ def myDijkstra(adj_matrix, origin):
 
     return dist, prev  # Output: Lists O(1)
 
-pip install scipy
 from scipy.io import loadmat
 
 
