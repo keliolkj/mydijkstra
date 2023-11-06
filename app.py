@@ -28,4 +28,4 @@ def shortest_path():
 
 # This is only used when running locally and will not work in a production environment
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=70)
