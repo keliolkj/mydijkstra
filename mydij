@@ -1,0 +1,91 @@
+from flask import Flask, jsonify, request
+import heapq
+import scipy.io
+import os
+
+app = Flask(__name__)
+
+class PriorityQueue:
+    def __init__(self):
+        self.elements = []
+
+    def is_empty(self):
+        return not self.elements
+
+    def put(self, item, priority):
+        heapq.heappush(self.elements, (priority, item))
+
+    def get(self):
+        return heapq.heappop(self.elements)[1]
+
+def myDijkstra(graph, start):
+    distances = {vertex: float('infinity') for vertex in graph}
+    previous_nodes = {vertex: None for vertex in graph}
+    distances[start] = 0
+    pq = PriorityQueue()
+    pq.put(start, 0)
+
+    while not pq.is_empty():
+        current_vertex = pq.get()
+
+        for neighbor, weight in graph[current_vertex].items():
+            alternative_route = distances[current_vertex] + weight
+            if alternative_route < distances[neighbor]:
+                distances[neighbor] = alternative_route
+                previous_nodes[neighbor] = current_vertex
+                pq.put(neighbor, alternative_route)
+
+    return distances, previous_nodes
+
+def load_graph_from_mat(file_path):
+    if not os.path.exists(file_path):
+        return None
+    mat_contents = scipy.io.loadmat(file_path)
+    key = next(key for key in mat_contents.keys() if key.startswith('graph'))
+    adjacency_matrix = mat_contents[key]
+    return convert_adjacency_matrix_to_dict(adjacency_matrix)
+
+def convert_adjacency_matrix_to_dict(adj_matrix):
+    graph_dict = {}
+    size = adj_matrix.shape[0]
+    for i in range(size):
+        graph_dict[i+1] = {}
+        for j in range(size):
+            if adj_matrix[i, j] != 0:  # There is an edge
+                graph_dict[i+1][j+1] = int(adj_matrix[i, j])
+    return graph_dict
+
+# Dictionary to hold the graphs
+graphs = {}
+
+@app.route('/shortest-path/<graph_name>', methods=['GET'])
+def shortest_path(graph_name):
+    origin = request.args.get('origin', type=int)
+    destination = request.args.get('destination', type=int)
+
+    if origin is None or destination is None:
+        return jsonify({"error": "Origin and destination parameters are required."}), 400
+
+    # Load the graph if it's not already loaded
+    if graph_name not in graphs:
+        graph_file_path = f'{graph_name}.mat'  # Assuming the file is named after the graph
+        graphs[graph_name] = load_graph_from_mat(graph_file_path)
+        if graphs[graph_name] is None:
+            return jsonify({"error": f"Graph {graph_name} not found."}), 404
+
+    graph = graphs[graph_name]
+    distances, previous_nodes = myDijkstra(graph, origin)
+
+    path = []
+    current_node = destination
+    while current_node is not None:
+        path.insert(0, current_node)
+        current_node = previous_nodes.get(current_node)
+
+    if not path or distances[destination] == float('infinity'):
+        return jsonify({"error": "No path found from origin to destination"}), 404
+
+    return jsonify({"shortest_path": path, "distance": distances[destination]})
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=80, debug=False)  # Set debug=False for production use
