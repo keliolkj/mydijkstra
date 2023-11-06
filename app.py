@@ -2,41 +2,41 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-# Here you would paste the full implementation of your PriorityQueue class and any other necessary classes or functions.
+# Insert your PriorityQueue class definition here
 class PriorityQueue:
-    # ... (include all the methods of the PriorityQueue class)
+    # Constructor and other methods with proper indentation
+    # ...
 
+# Insert your myDijkstra function here, with proper indentation
 def myDijkstra(adj_matrix, origin):
-    # ... (implement the Dijkstra's algorithm)
+    # Your Dijkstra's algorithm implementation
+    # ...
 
 @app.route('/shortest-path')
 def shortest_path():
-    # Extract origin and destination from the URL parameters
-    origin = request.args.get('origin', default=None, type=int)
-    destination = request.args.get('destination', default=None, type=int)
+    origin = request.args.get('origin', type=int)
+    destination = request.args.get('destination', type=int)
 
-    # Validate the input
     if origin is None or destination is None:
-        return jsonify({"error": "Origin and destination must be provided."}), 400
+        return jsonify({"error": "Origin and destination parameters are required."}), 400
 
-    # Here, you would need to define or load your graph's adjacency matrix
-    adj_matrix = # ... (define or load your adjacency matrix here)
+    # Assuming adj_matrix is globally defined or you have a way to get it based on origin and destination
+    adj_matrix = # ... (your code to generate or get the adjacency matrix)
 
-    # Call your Dijkstra's algorithm function
+    # Get the shortest path from the Dijkstra's algorithm
     dist, prev = myDijkstra(adj_matrix, origin)
-
-    # Reconstruct the path from origin to destination
+    
+    # Reconstruct the path from the destination to the origin
     path = []
     current_node = destination
-    while current_node != origin:
-        if current_node is None or prev[current_node] is None:
-            return jsonify({"error": "Path not found."}), 404
+    while current_node is not None and current_node != origin:
         path.insert(0, current_node)
         current_node = prev[current_node]
+    if current_node is None:
+        return jsonify({"error": "No path found from origin to destination"}), 404
     path.insert(0, origin)
-
-    # Return the path as a JSON response
+    
     return jsonify({"shortest_path": path})
 
 if __name__ == '__main__':
-    app.run(debug=True)  # Set debug=False for production
+    app.run(host='0.0.0.0', port=70, debug=True)  # Running on all interfaces on port 80, not recommended for production
