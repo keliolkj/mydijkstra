@@ -77,11 +77,14 @@ def myDijkstra(adj_matrix, origin):
                 new_distance = dist[current_node] + adj_matrix[current_node][neighbor]
                 if new_distance < dist[neighbor]:
                     dist[neighbor] = new_distance
-                    prev[neighbor] = current_node
+                    prev[neighbor] = current_node  # This should be current_node, not current_node + 1
                     pq.decreaseKey(neighbor, new_distance)
 
+    # Convert prev to 1-based indexing and handle None values.
+    prev = [0 if prev[i] is None else prev[i] + 1 for i in range(num_nodes)]
     return dist, prev
 
+# Adjust the run_dijkstra_on_all_graphs function accordingly:
 def run_dijkstra_on_all_graphs(graph_files):
     output = StringIO()
 
@@ -93,18 +96,15 @@ def run_dijkstra_on_all_graphs(graph_files):
             origin = 0
             distances, previous_nodes = myDijkstra(adj_matrix, origin)
 
-            # Adjust prev array for 1-indexing for output and handling of unreachable nodes
-            prev = ['None' if p is None else str(p + 1) for p in previous_nodes]
-
             output.write(f'Graph {idx + 1} results:\n')
             output.write("dist: " + " ".join(map(lambda d: 'Inf' if d == float('inf') else str(d), distances)) + "\n")
-            output.write("prev: " + " ".join(prev) + "\n\n")
+            output.write("prev: " + " ".join(map(str, previous_nodes)) + "\n\n")
         else:
             output.write(f'Error reading {graph_file}: No valid variable names found.\n\n')
 
     return output.getvalue()
 
-
+# Flask app setup remains the same
 @app.route('/')
 def run_script():
     graph_files = ['graph1.mat', 'graph2.mat', 'graph3.mat', 'graph4.mat', 'graph5.mat', 'graph6.mat']
