@@ -66,6 +66,7 @@ def myDijkstra(adj_matrix, origin):
     dist = [float('inf')] * num_nodes
     prev = [None] * num_nodes
     dist[origin] = 0
+    prev[origin] = origin  # Set the prev of the origin to itself
     pq = PriorityQueue()
     pq.insert(origin, 0)
 
@@ -77,12 +78,15 @@ def myDijkstra(adj_matrix, origin):
                 new_distance = dist[current_node] + adj_matrix[current_node][neighbor]
                 if new_distance < dist[neighbor]:
                     dist[neighbor] = new_distance
-                    prev[neighbor] = current_node  # This should be current_node, not current_node + 1
+                    prev[neighbor] = current_node  # Set the prev to the current_node
                     pq.decreaseKey(neighbor, new_distance)
 
-    # Convert prev to 1-based indexing and handle None values.
-    prev = [0 if prev[i] is None else prev[i] + 1 for i in range(num_nodes)]
+    # Adjust prev array for 1-based indexing.
+    prev = [p + 1 if p is not None else None for p in prev]  # +1 for 1-based indexing
+    # Set the prev of the origin to 0 for the expected output format
+    prev[origin] = 0
     return dist, prev
+
 
 # Adjust the run_dijkstra_on_all_graphs function accordingly:
 def run_dijkstra_on_all_graphs(graph_files):
