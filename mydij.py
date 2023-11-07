@@ -82,9 +82,8 @@ def myDijkstra(adj_matrix, origin):
 
     return dist, prev
 
-def main_script():
+def run_dijkstra_on_all_graphs(graph_files):
     output = StringIO()
-    graph_files = ['graph1.mat', 'graph2.mat', 'graph3.mat', 'graph4.mat', 'graph5.mat', 'graph6.mat']
 
     for idx, graph_file in enumerate(graph_files):
         mat_contents = loadmat(graph_file)
@@ -92,15 +91,13 @@ def main_script():
         if variable_names:
             adj_matrix = mat_contents[variable_names[0]]
             origin = 0
-            dist, prev = myDijkstra(adj_matrix, origin)
-            
-            output.write(f'Table {idx + 1}: {graph_file}\n')
-            output.write('dist prev\n')
-            for i in range(len(dist)):
-                dist_val = dist[i] if dist[i] != float('inf') else 'Inf'
-                prev_val = prev[i] if prev[i] is not None else 'None'
-                output.write(f'{dist_val:<5} {prev_val:<5}\n')
-            output.write('\n')
+            distances, previous_nodes = myDijkstra(adj_matrix, origin)
+
+            prev = [None if d == float('inf') else previous_nodes[i] for i, d in enumerate(distances)]
+
+            output.write(f'Graph {idx + 1} results:\n')
+            output.write("dist: " + " ".join(map(lambda d: 'Inf' if d == float('inf') else str(d), distances)) + "\n")
+            output.write("prev: " + " ".join(map(lambda p: 'None' if p is None else str(p), prev)) + "\n\n")
         else:
             output.write(f'Error reading {graph_file}: No valid variable names found.\n\n')
 
@@ -108,7 +105,8 @@ def main_script():
 
 @app.route('/')
 def run_script():
-    result = main_script()
+    graph_files = ['graph1.mat', 'graph2.mat', 'graph3.mat', 'graph4.mat', 'graph5.mat', 'graph6.mat']
+    result = run_dijkstra_on_all_graphs(graph_files)
     return f"<pre>{result}</pre>"
 
 if __name__ == '__main__':
