@@ -116,9 +116,10 @@ def run_dijkstra_on_all_graphs(graph_files):
             origin = 0
             distances, previous_nodes = myDijkstra(adj_matrix, origin)
 
-            # Convert 'inf' to 'Inf' for readability and adjust previous_nodes for 1-based indexing
+            # Convert 'inf' to 'Inf' for readability and decrement previous_nodes for 0-based indexing
             distances_str = ["Inf" if d == float('inf') else str(d) for d in distances]
-            previous_nodes_str = ["None" if p is None else str(p + 1) for p in previous_nodes]
+            # Decrement previous nodes by 1 for 0-based indexing and handle None values
+            previous_nodes_str = ["None" if p is None else str(p) for p in previous_nodes]
 
             output.write(f'Graph {idx + 1} results:\n')
             output.write("dist: " + " ".join(distances_str) + "\n")
@@ -127,6 +128,7 @@ def run_dijkstra_on_all_graphs(graph_files):
             output.write(f'Error reading {graph_file}: No valid variable names found.\n\n')
 
     return output.getvalue()
+
 
 @app.route('/')
 def run_script():
