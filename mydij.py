@@ -130,7 +130,9 @@ def main_script():
         output.write(f'Table {idx + 1}: {graph_file}\n')
         output.write('dist prev\n')
         for i in range(len(dist)):
-            output.write(f'{dist[i]:<4} {prev[i]:<4}\n')
+            # Check if prev[i] is None and handle it
+            prev_node = 'None' if prev[i] is None else prev[i]
+            output.write(f'{dist[i]:<5} {prev_node:<5}\n')
         output.write('\n')  # Separate results of different graphs with an empty line
 
     # Return the entire buffer contents as a string
